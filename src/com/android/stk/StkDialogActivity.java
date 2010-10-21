@@ -16,7 +16,7 @@
 
 package com.android.stk;
 
-import com.android.internal.telephony.gsm.stk.TextMessage;
+import com.android.internal.telephony.cat.TextMessage;
 
 import android.app.Activity;
 import android.content.Intent;
