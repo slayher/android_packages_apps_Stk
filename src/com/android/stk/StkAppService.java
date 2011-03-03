@@ -650,6 +650,7 @@ public class StkAppService extends Service implements Runnable {
                     mBrowserSettings = mCurrentCmd.getBrowserSettings();
                 }
                 break;
+            case OPEN_CHANNEL:
             case SET_UP_CALL:
                 resMsg.setResultCode(ResultCode.OK);
                 resMsg.setConfirmation(confirmed);
