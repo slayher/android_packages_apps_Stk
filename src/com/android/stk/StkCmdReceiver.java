@@ -17,6 +17,7 @@
 package com.android.stk;
 
 import com.android.internal.telephony.cat.AppInterface;
+import com.android.internal.telephony.IccRefreshResponse;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -89,6 +90,18 @@ public class StkCmdReceiver extends BroadcastReceiver {
     private void handleLocaleChange(Context context) {
         Bundle args = new Bundle();
         args.putInt(StkAppService.OPCODE, StkAppService.OP_LOCALE_CHANGED);
+        context.startService(new Intent(context, StkAppService.class)
+                .putExtras(args));
+    }
+
+    private void handleIccStatusChange(Context context, Intent intent) {
+        Bundle args = new Bundle();
+        args.putInt(StkAppService.OPCODE, StkAppService.OP_ICC_STATUS_CHANGE);
+        args.putBoolean("RADIO_AVAILABLE",
+                intent.getBooleanExtra("RADIO_AVAILABLE",true));
+        args.putInt("REFRESH_RESULT", intent
+                .getIntExtra("REFRESH_RESULT",
+                    IccRefreshResponse.Result.SIM_FILE_UPDATE.ordinal()));
         context.startService(new Intent(context, StkAppService.class)
                 .putExtras(args));
     }

@@ -51,6 +51,7 @@ import com.android.internal.telephony.cat.CatLog;
 import com.android.internal.telephony.cat.CatResponseMessage;
 import com.android.internal.telephony.cat.TextMessage;
 import com.android.internal.telephony.GsmAlphabet;
+import com.android.internal.telephony.IccRefreshResponse;
 
 import java.util.LinkedList;
 
@@ -348,6 +349,45 @@ public class StkAppService extends Service implements Runnable {
                 CatLog.d(this, "Locale Changed");
                 checkForSetupEvent(LANGUAGE_SELECTION_EVENT,(Bundle) msg.obj);
                 break;
+            case OP_ICC_STATUS_CHANGE:
+                CatLog.d(this, "Icc Status change received");
+                handleIccStatusChange((Bundle) msg.obj);
+                break;
+            case MSG_ID_STOP_TONE:
+                CatLog.d(this, "Received MSG_ID_STOP_TONE");
+                handleStopTone();
+                break;
+            }
+        }
+    }
+
+    private void handleIccStatusChange(Bundle args) {
+        Boolean RadioStatus = args.getBoolean("RADIO_AVAILABLE");
+
+        if (RadioStatus == false) {
+            CatLog.d(this, "RADIO_OFF_OR_UNAVAILABLE received");
+            // Unistall STKAPP, Clear Idle text, Stop StkAppService
+            StkAppInstaller.unInstall(mContext);
+            mNotificationManager.cancel(STK_NOTIFICATION_ID);
+            stopSelf();
+        } else {
+            IccRefreshResponse state = new IccRefreshResponse();
+            state.refreshResult = IccRefreshResponse.Result
+                    .values()[args.getInt("REFRESH_RESULT")];
+
+            CatLog.d(this, "Icc Refresh Result: "+ state.refreshResult);
+            if ((state.refreshResult == IccRefreshResponse.Result.SIM_INIT) ||
+                (state.refreshResult == IccRefreshResponse.Result.SIM_RESET)) {
+                // Clear Idle Text
+                mNotificationManager.cancel(STK_NOTIFICATION_ID);
+                mIdleModeTextCmd = null;
+            }
+
+            if (state.refreshResult == IccRefreshResponse.Result.SIM_RESET) {
+                // Uninstall STkmenu
+                StkAppInstaller.unInstall(mContext);
+                mCurrentMenu = null;
+                mMainCmd = null;
             }
         }
     }
