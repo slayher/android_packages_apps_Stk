@@ -29,6 +29,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.os.Vibrator;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.view.Gravity;
@@ -117,6 +118,7 @@ public class StkAppService extends Service implements Runnable {
     static final int OP_IDLE_SCREEN = 7;
     static final int OP_BROWSER_TERMINATION = 8;
     static final int OP_LOCALE_CHANGED = 9;
+    static final int OP_ICC_STATUS_CHANGE = 10;
 
     //Invalid SetupEvent
     static final int INVALID_SETUP_EVENT = 0xFF;
@@ -143,6 +145,10 @@ public class StkAppService extends Service implements Runnable {
     private CatCmdMessage mIdleModeTextCmd = null;
     private boolean mDisplayText = false;
     private boolean mScreenIdle = true;
+    TonePlayer player = null;
+    Vibrator mVibrator = new Vibrator();
+    // Message id to signal tone duration timeout.
+    private static final int MSG_ID_STOP_TONE = 0xda;
 
     // Inner class used for queuing telephony messages (proactive commands,
     // session end) while the service is busy processing a previous message.
@@ -436,6 +442,14 @@ public class StkAppService extends Service implements Runnable {
         } else {
             mCmdInProgress = false;
         }
+    }
+
+    private void handleStopTone() {
+        sendResponse(StkAppService.RES_ID_DONE);
+        player.stop();
+        player.release();
+        mVibrator.cancel();
+        CatLog.d(this, "Finished handling PlayTone with Null alpha");
     }
 
     private void sendResponse(int resId) {
